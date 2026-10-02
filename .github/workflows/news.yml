@@ -1,0 +1,48 @@
+name: Update news
+
+on:
+  schedule:
+    - cron: "0 5 * * *" # every day at 05:00 UTC
+  workflow_dispatch: # run it by hand from the Actions tab
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/configure-pages@v6
+        id: pages
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies and the German language model
+        run: |
+          pip install -r requirements.txt
+          python -m spacy download de_core_news_sm
+      - name: Scrape, mirror the images, build the site
+        run: python build_site.py --base-url "${{ steps.pages.outputs.base_url }}" --out site
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

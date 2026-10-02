@@ -1,0 +1,5 @@
+site/
+tagesspiegel.json
+__pycache__/
+.venv/
+.DS_Store
