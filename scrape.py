@@ -120,6 +120,6 @@ if __name__ == "__main__":
             print(f"!! {name}: {e}")
             results.append({"source": name, "error": str(e)})
 
-    with open("tagesspiegel.json", "w", encoding="utf-8") as f:
+    with open("news.json", "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
-    print(f"saved {len(results)} entries to tagesspiegel.json")
+    print(f"saved {len(results)} entries to news.json")

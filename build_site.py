@@ -2,7 +2,7 @@
 
     python build_site.py --base-url https://<user>.github.io/<repo> --out site
 
-Writes <out>/tagesspiegel.json (same format the scraper makes, but "image" points at the
+Writes <out>/news.json (same format the scraper makes, but "image" points at the
 mirrored copy and the original URL moves to "image_source") and <out>/images/*.jpg.
 """
 import argparse
@@ -58,14 +58,13 @@ def main():
     images_dir = out / "images"
     images_dir.mkdir(parents=True, exist_ok=True)
 
-    subprocess.run([sys.executable, str(HERE / "tagesspiegel.py")], cwd=HERE, check=True)
-    articles = json.loads((HERE / "tagesspiegel.json").read_text(encoding="utf-8"))
+    subprocess.run([sys.executable, str(HERE / "scrape.py")], cwd=HERE, check=True)
+    articles = json.loads((HERE / "news.json").read_text(encoding="utf-8"))
 
     # Don't replace yesterday's good data with a broken scrape.
     ok = [a for a in articles if "spacy" in a]
-    if not any(a["source"] == "Tagesspiegel" for a in ok) or len(ok) < len(articles) / 2:
-        sys.exit(f"Not publishing: only {len(ok)} of {len(articles)} articles were scraped "
-                 "(or Tagesspiegel is missing).")
+    if len(ok) < len(articles) / 2:
+        sys.exit(f"Not publishing: only {len(ok)} of {len(articles)} articles were scraped.")
 
     for article in ok:
         source_url = article.get("image")
@@ -79,7 +78,7 @@ def main():
         except Exception as e:  # one broken picture must not stop the rest
             print(f"!! image {article['source']}: {e}")
 
-    (out / "tagesspiegel.json").write_text(
+    (out / "news.json").write_text(
         json.dumps(articles, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"published {len(ok)} articles, {len(list(images_dir.iterdir()))} images -> {out}/")
 
